@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHASHKA — Checkers Arena</title>
+<style>
+:root{--bg:#101522;--panel:#192235;--panel2:#202c43;--gold:#f4c76b;--cream:#f2e6cc;--dark:#29344b;--red:#e85d5d;--blue:#5e9cff;--muted:#aab5c8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0%,#253653 0,#101522 55%);color:#f5f7fb;font-family:Inter,system-ui,Segoe UI,sans-serif;display:flex;justify-content:center;padding:24px}
+.app{width:min(1100px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#f6d88e,#d69a3e);display:grid;place-items:center;color:#182033;font-size:25px;box-shadow:0 8px 25px #0005}.brand h1{font-size:22px;letter-spacing:2px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px;letter-spacing:1.4px}.top-actions{display:flex;gap:9px;flex-wrap:wrap}
+button,select{font:inherit}button{border:0;cursor:pointer;color:#f7f8fc;background:var(--panel2);padding:11px 15px;border-radius:11px;font-weight:650;transition:.18s}button:hover{filter:brightness(1.16);transform:translateY(-1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.primary{background:linear-gradient(135deg,#f4d48d,#d99c45);color:#182033}.layout{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:20px;align-items:start}.board-card,.side-card{background:linear-gradient(145deg,#1b263a,#151e2f);border:1px solid #ffffff12;border-radius:20px;box-shadow:0 18px 55px #0004}.board-card{padding:17px}.statusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.turn{display:flex;align-items:center;gap:10px;font-weight:750}.dot{width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px #e85d5d20}.turn.blue .dot{background:var(--blue);box-shadow:0 0 0 5px #5e9cff20}.status-text{color:var(--muted);font-size:13px;text-align:right}
+.board-wrap{width:100%;max-width:680px;margin:auto;position:relative}.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border:7px solid #b88b4d;border-radius:8px;overflow:hidden;box-shadow:0 14px 35px #0007;touch-action:manipulation}.square{position:relative;display:grid;place-items:center;min-width:0;min-height:0}.light{background:var(--cream)}.dark{background:var(--dark);cursor:pointer}.dark:hover{filter:brightness(1.18)}.square.selected{outline:4px solid var(--gold);outline-offset:-4px}.square.move::after{content:"";width:28%;height:28%;border-radius:50%;background:#f4c76b;box-shadow:0 0 0 5px #f4c76b35}.square.capture::after{width:65%;height:65%;background:transparent;border:4px solid #f4c76b;box-shadow:none}.piece{width:76%;height:76%;border-radius:50%;position:relative;display:grid;place-items:center;box-shadow:inset 0 5px 5px #ffffff55,inset 0 -7px 9px #0006,0 5px 7px #0008;transition:transform .15s;z-index:1}.piece.red{background:radial-gradient(circle at 35% 25%,#ff9b91,#d9474e 65%,#8d222e)}.piece.blue{background:radial-gradient(circle at 35% 25%,#a8d0ff,#4d83d8 65%,#234b91)}.piece.king:after{content:"♛";font-size:clamp(17px,3.4vw,31px);color:#ffe6a3;text-shadow:0 2px 3px #563b17}.piece:hover{transform:scale(1.06)}.coord{position:absolute;font-size:9px;color:#ffffff66;left:4px;top:2px;pointer-events:none}.legend{display:flex;justify-content:center;gap:22px;margin-top:13px;color:var(--muted);font-size:12px}.legend span{display:flex;align-items:center;gap:7px}.mini{width:11px;height:11px;border-radius:50%}.side{display:grid;gap:14px}.side-card{padding:18px}.side-card h2{font-size:14px;margin:0 0 14px;letter-spacing:1px;color:#dce4f3}.mode-select{width:100%;padding:11px;background:#111a2a;border:1px solid #ffffff20;border-radius:10px;color:white;margin-bottom:12px}.score{display:grid;grid-template-columns:1fr 1fr;gap:10px}.scorebox{background:#111a2a;border-radius:13px;padding:13px}.scorebox .name{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}.scorebox strong{display:block;font-size:27px;margin-top:5px}.scorebox small{color:var(--muted)}.stats{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #ffffff10;font-size:13px;color:var(--muted)}.stats strong{color:#f5f7fb}.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}.controls button{padding:10px 8px;font-size:13px}.tip{color:var(--muted);font-size:12px;line-height:1.6;margin:0}.message{min-height:45px;padding:12px;border-radius:12px;background:#111a2a;color:#dbe4f3;font-size:13px;line-height:1.5}.message b{color:var(--gold)}.footer{text-align:center;color:#77849a;font-size:11px;margin-top:18px}
+@media(max-width:800px){body{padding:14px}.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.side-card:first-child{grid-column:1/-1}.board-card{padding:10px}.board{border-width:5px}}
+@media(max-width:480px){header{align-items:flex-start}.brand h1{font-size:18px}.logo{width:42px;height:42px}.top-actions button{padding:9px 10px;font-size:12px}.side{grid-template-columns:1fr}.side-card:first-child{grid-column:auto}.status-text{font-size:11px}.legend{gap:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="brand"><div class="logo">♛</div><div><h1>SHASHKA ARENA</h1><p>STRATEGIYA • AQL • G‘ALABA</p></div></div>
+ <div class="top-actions"><button id="restartTop" class="primary">↻ Yangi o‘yin</button></div>
+</header>
+<div class="layout">
+ <main class="board-card">
+  <div class="statusbar"><div class="turn" id="turn"><i class="dot"></i><span>Qizil yuradi</span></div><div class="status-text" id="status">Donani tanlang</div></div>
+  <div class="board-wrap"><div class="board" id="board" aria-label="Shashka taxtasi"></div></div>
+  <div class="legend"><span><i class="mini" style="background:#e85d5d"></i> Qizil</span><span><i class="mini" style="background:#5e9cff"></i> Ko‘k</span><span>♛ — Damka</span></div>
+ </main>
+ <aside class="side">
+  <section class="side-card">
+   <h2>O‘YIN SOZLAMALARI</h2>
+   <div class="mode-select" style="text-align:center">👥 2 O‘YINCHI — BIR KOMPYUTERDA</div>
+   <div class="score">
+    <div class="scorebox"><div class="name"><i class="mini" style="background:#e85d5d"></i> QIZIL</div><strong id="redCount">12</strong><small>donalar</small></div>
+    <div class="scorebox"><div class="name"><i class="mini" style="background:#5e9cff"></i> KO‘K</div><strong id="blueCount">12</strong><small>donalar</small></div>
+   </div>
+  </section>
+  <section class="side-card">
+   <h2>O‘YIN NATIJASI</h2>
+   <div class="stats"><span>Yurishlar</span><strong id="moves">0</strong></div>
+   <div class="stats"><span>Olingan donalar</span><strong id="captures">0</strong></div>
+   <div class="stats"><span>Daraja</span><strong id="level">Aqlli</strong></div>
+  </section>
+  <section class="side-card">
+   <h2>BOSHQARUV</h2>
+   <div class="controls"><button id="undo">↶ Ortga</button><button id="hint">✦ Maslahat</button><button id="restart" class="primary" style="grid-column:1/-1">Yangi o‘yin</button></div>
+  </section>
+  <section class="side-card">
+   <h2>QOIDALAR</h2>
+   <p class="tip">• Donani bosib, keyin yuradigan katakni tanlang.<br>• Raqib donasini olish majburiy.<br>• Bir urishda ketma-ket olish mumkin.<br>• Oxirgi qatorga yetgan dona <b>damka</b> bo‘ladi.<br>• Damka oldinga ham, orqaga ham yuradi.</p>
+  </section>
+  <div class="message" id="message">O‘yinni boshlash uchun qizil donalardan birini tanlang. Omad! 🎯</div>
+ </aside>
+</div>
+<div class="footer">SHASHKA ARENA · YAXSHI O‘YIN!</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let board,turn,selected=null,legal=[],forced=null,history=[],moveCount=0,captureCount=0,gameOver=false,thinking=false;
+const dirs=[[-1,-1],[-1,1],[1,-1],[1,1]];
+function initial(){let b=Array.from({length:8},()=>Array(8).fill(null));for(let r=0;r<3;r++)for(let c=0;c<8;c++)if((r+c)%2===1)b[r][c]={color:'blue',king:false};for(let r=5;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2===1)b[r][c]={color:'red',king:false};return b}
+function clone(b){return b.map(row=>row.map(p=>p?{...p}:null))}
+function inside(r,c){return r>=0&&r<8&&c>=0&&c<8}
+function dirsFor(p){return p.king?dirs:(p.color==='red'?[[-1,-1],[-1,1]]:[[1,-1],[1,1]])}
+function allMoves(b,color,captureOnly=false){
+ let captures=[],steps=[];
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p||p.color!==color)continue;
+  for(let [dr,dc] of dirsFor(p)){let r1=r+dr,c1=c+dc,r2=r+2*dr,c2=c+2*dc;
+   if(inside(r2,c2)&&b[r1]?.[c1]&&b[r1][c1].color!==color&&!b[r2][c2])captures.push({from:[r,c],to:[r2,c2],cap:[r1,c1]});
+   if(!captureOnly&&inside(r1,c1)&&!b[r1][c1])steps.push({from:[r,c],to:[r1,c1],cap:null});
+  }
+ }
+ return captures.length?captures:(captureOnly?[]:steps)
+}
+function movesForPiece(r,c){let p=board[r][c];if(!p)return[];let ms=allMoves(board,turn).filter(m=>m.from[0]===r&&m.from[1]===c);return ms}
+function save(){history.push({board:clone(board),turn,moveCount,captureCount});if(history.length>80)history.shift()}
+function start(){board=initial();turn='red';selected=null;legal=[];forced=null;history=[];moveCount=0;captureCount=0;gameOver=false;thinking=false;render();setMessage('O‘yinni boshlang! Qizil donalar birinchi yuradi.')}
+function setMessage(s){$('message').innerHTML=s}
+function render(){
+ const el=$('board');el.innerHTML='';
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  const sq=document.createElement('div');sq.className='square '+((r+c)%2?'dark':'light');
+  if(selected&&selected[0]===r&&selected[1]===c)sq.classList.add('selected');
+  const target=legal.find(m=>m.to[0]===r&&m.to[1]===c);if(target)sq.classList.add('move');if(target?.cap)sq.classList.add('capture');
+  if((r+c)%2===1){const coord=document.createElement('span');coord.className='coord';coord.textContent=String.fromCharCode(97+c)+(8-r);sq.append(coord);sq.addEventListener('click',()=>clickSquare(r,c))}
+  const p=board[r][c];if(p){const piece=document.createElement('div');piece.className='piece '+p.color+(p.king?' king':'');sq.append(piece)}
+  el.append(sq)
+ }
+ $('turn').className='turn '+turn;$('turn').querySelector('span').textContent=turn==='red'?'Qizil yuradi':'Ko‘k yuradi';
+ $('status').textContent=thinking?'Kuting…':forced?'Yana urish kerak!':gameOver?'O‘yin tugadi':'Donani tanlang';
+ $('redCount').textContent=board.flat().filter(p=>p?.color==='red').length;$('blueCount').textContent=board.flat().filter(p=>p?.color==='blue').length;
+ $('moves').textContent=moveCount;$('captures').textContent=captureCount;$('undo').disabled=!history.length||thinking;
+ $('hint').disabled=gameOver||thinking;
+}
+function clickSquare(r,c){
+ if(gameOver||thinking)return;
+ const p=board[r][c];
+ if(selected){const m=legal.find(x=>x.to[0]===r&&x.to[1]===c);if(m){doMove(m);return}}
+ if(p&&p.color===turn&&(!forced||(forced[0]===r&&forced[1]===c))){selected=[r,c];legal=movesForPiece(r,c);if(!legal.length){selected=null;setMessage('Bu dona hozir yura olmaydi.');}else setMessage(legal.some(m=>m.cap)?'Urish majburiy! Belgilangan katakni tanlang.':'Yurish uchun sariq katakni tanlang.');render();return}
+ if(!forced){selected=null;legal=[];render()}
+}
+function doMove(m,computer=false){
+ if(!computer)save();
+ const [r,c]=m.from,[nr,nc]=m.to,p=board[r][c];board[nr][nc]=p;board[r][c]=null;
+ if(m.cap){board[m.cap[0]][m.cap[1]]=null;captureCount++}
+ if((p.color==='red'&&nr===0)||(p.color==='blue'&&nr===7))p.king=true;
+ moveCount++;
+ selected=null;legal=[];
+ if(m.cap){const more=allMoves(board,turn,true).filter(x=>x.from[0]===nr&&x.from[1]===nc);if(more.length){forced=[nr,nc];selected=[nr,nc];legal=more;setMessage('Zo‘r! Yana bitta donani olishingiz mumkin.');render();return}}
+ forced=null;turn=turn==='red'?'blue':'red';
+ const next=allMoves(board,turn);
+ if(!next.length){gameOver=true;const winner=turn==='red'?'Ko‘k':'Qizil';setMessage('🏆 <b>'+winner+' g‘alaba qozondi!</b> Boshqa o‘yin boshlash uchun “Yangi o‘yin”ni bosing.')}
+ else if(!board.flat().some(x=>x?.color===turn)){gameOver=true;setMessage('🏆 <b>'+(turn==='red'?'Ko‘k':'Qizil')+' g‘alaba qozondi!</b>')}
+ else setMessage(turn==='red'?'Sizning navbatingiz.':'Ko‘k donalar yuradi.');
+ render();
+ 
+}
+function undo(){if(!history.length||thinking)return;const s=history.pop();board=clone(s.board);turn=s.turn;moveCount=s.moveCount;captureCount=s.captureCount;selected=null;legal=[];forced=null;gameOver=false;render();setMessage('Oxirgi yurish bekor qilindi.')}
+function hint(){if(gameOver||thinking)return;let ms=allMoves(board,turn);if(!ms.length)return;let m=ms[0];if(turn==='red'){let best=-Infinity;for(let x of ms){let v=evaluate(apply(board,x));if(v>best){best=v;m=x}}}selected=m.from;legal=movesForPiece(...m.from);setMessage('Maslahat: <b>'+String.fromCharCode(97+m.to[1])+(8-m.to[0])+'</b> katagiga yuring.');render()}
+$('restart').onclick=$('restartTop').onclick=start;$('undo').onclick=undo;$('hint').onclick=hint;
+start();setMessage('Qizil va ko‘k donalar bilan ikki kishi navbatma-navbat o‘ynaydi! 🎯');
+</script>
+</body>
+</html>
