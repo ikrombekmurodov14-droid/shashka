@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shashka O'yini</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #scoreboard {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .board-container {
+            perspective: 1000px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            transform: rotateX(15deg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 4px solid #4a2e18;
+            border-radius: 4px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .light {
+            background-color: #f0d9b5;
+        }
+
+        .dark {
+            background-color: #b58863;
+        }
+
+        .square.selected {
+            background-color: #7b9b54 !important;
+        }
+
+        .square.highlight {
+            background-color: #648c48 !important;
+        }
+
+        .square.highlight::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 255, 0, 0.4);
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .piece {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .piece:hover {
+            transform: scale(1.05);
+        }
+
+        .piece.white {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #dcdcdc);
+            border: 2px solid #b5b5b5;
+            color: #333;
+        }
+
+        .piece.red {
+            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000);
+            border: 2px solid #800000;
+            color: #fff;
+        }
+
+        .piece.king::after {
+            content: '👑';
+            font-size: 22px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #e94560, #d63031);
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #status {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffd369;
+        }
+
+        @media (max-width: 500px) {
+            #board {
+                grid-template-columns: repeat(8, 42px);
+                grid-template-rows: repeat(8, 42px);
+            }
+            .square {
+                width: 42px;
+                height: 42px;
+            }
+            .piece {
+                width: 34px;
+                height: 34px;
+            }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>♟️ 3D SHASHKA</h1>
+    <div id="scoreboard">Navbat: <span id="turnIndicator" style="font-weight: bold; color: #ff4d4d;">Qizil (Siz)</span></div>
+
+    <div class="board-container">
+        <div id="board"></div>
+    </div>
+
+    <div id="status">Donani tanlang va yurish qiling</div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Yangi O'yin</button>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        const turnIndicator = document.getElementById('turnIndicator');
+
+        let board = [];
+        let turn = 'red'; // 'red' (Siz - pastda) yoki 'white' (Kompyuter - tepada)
+        let selectedPiece = null;
+        let validMoves = [];
+
+        function initGame() {
+            board = [];
+            for (let r = 0; r < 8; r++) {
+                board[r] = [];
+                for (let c = 0; c < 8; c++) {
+                    if ((r + c) % 2 === 1) {
+                        if (r < 3) {
+                            board[r][c] = { player: 'white', king: false };
+                        } else if (r > 4) {
+                            board[r][c] = { player: 'red', king: false };
+                        } else {
+                            board[r][c] = null;
+                        }
+                    } else {
+                        board[r][c] = null;
+                    }
+                }
+            }
+            turn = 'red';
+            selectedPiece = null;
+            validMoves = [];
+            renderBoard();
+            updateStatus();
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((r + c) % 2 === 1 ? 'dark' : 'light');
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+
+                    // Tanlangan katakni belgilash
+                    if (selectedPiece && selectedPiece.row === r && selectedPiece.col === c) {
+                        square.classList.add('selected');
+                    }
+
+                    // Yurish mumkin bo'lgan kataklar
+                    if (validMoves.some(m => m.row === r && m.col === c)) {
+                        square.classList.add('highlight');
+                    }
+
+                    const piece = board[r][c];
+                    if (piece) {
+                        const pieceElement = document.createElement('div');
+                        pieceElement.classList.add('piece', piece.player);
+                        if (piece.king) pieceElement.classList.add('king');
+                        square.appendChild(pieceElement);
+                    }
+
+                    square.addEventListener('click', () => handleSquareClick(r, c));
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            if (turn !== 'red') return; // Faqat qizil (foydalanuvchi) yuradi
+
+            const piece = board[r][c];
+
+            // Agar o'z donasini bossa
+            if (piece && piece.player === turn) {
+                selectedPiece = { row: r, col: c };
+                validMoves = getValidMoves(r, c);
+                renderBoard();
+                return;
+            }
+
+            // Agar yurish mumkin bo'lgan katakni bossa
+            const move = validMoves.find(m => m.row === r && m.col === c);
+            if (move) {
+                executeMove(selectedPiece.row, selectedPiece.col, move.row, move.col, move.jumped);
+                selectedPiece = null;
+                validMoves = [];
+                renderBoard();
+
+                // Agar o'yin tugamagan bo'lsa, kompyuter yurishi
+                if (!checkGameOver()) {
+                    turn = 'white';
+                    updateStatus();
+                    setTimeout(aiMove, 600);
+                }
+            }
+        }
+
+        function getValidMoves(r, c) {
+            const piece = board[r][c];
+            if (!piece) return [];
+            let moves = [];
+            let directions = [];
+
+            if (piece.king) {
+                directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            } else {
+                if (piece.player === 'red') {
+                    directions = [[-1, -1], [-1, 1]];
+                } else {
+                    directions = [[1, -1], [1, 1]];
+                }
+            }
+
+            directions.forEach(([dr, dc]) => {
+                let nr = r + dr;
+                let nc = c + dc;
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                    if (!board[nr][nc]) {
+                        moves.push({ row: nr, col: nc, jumped: null });
+                    } else if (board[nr][nc].player !== piece.player) {
+                        let nnr = nr + dr;
+                        let nnc = nc + dc;
+                        if (nnr >= 0 && nnr < 8 && nnc >= 0 && nnc < 8 && !board[nnr][nnc]) {
+                            moves.push({ row: nnr, col: nc, jumped: { row: nr, col: nc } });
+                        }
+                    }
+                }
+            });
+
+            return moves;
+        }
+
+        function executeMove(sr, sc, tr, tc, jumped) {
+            board[tr][tc] = board[sr][sc];
+            board[sr][sc] = null;
+
+            if (jumped) {
+                board[jumped.row][jumped.col] = null;
+            }
+
+            // Dambkaga aylanish
+            if (board[tr][tc].player === 'red' && tr === 0) board[tr][tc].king = true;
+            if (board[tr][tc].player === 'white' && tr === 7) board[tr][tc].king = true;
+        }
+
+        function aiMove() {
+            let allMoves = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c] && board[r][c].player === 'white') {
+                        let moves = getValidMoves(r, c);
+                        moves.forEach(m => {
+                            allMoves.push({ sr: r, sc: c, tr: m.row, tc: m.col, jumped: m.jumped });
+                        });
+                    }
+                }
+            }
+
+            if (allMoves.length > 0) {
+                let attackMoves = allMoves.filter(m => m.jumped !== null);
+                let chosenMove = attackMoves.length > 0 ? attackMoves[Math.floor(Math.random() * attackMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
+
+                executeMove(chosenMove.sr, chosenMove.sc, chosenMove.tr, chosenMove.tc, chosenMove.jumped);
+            }
+
+            if (!checkGameOver()) {
+                turn = 'red';
+                updateStatus();
+                renderBoard();
+            }
+        }
+
+        function checkGameOver() {
+            let redCount = 0;
+            let whiteCount = 0;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c]) {
+                        if (board[r][c].player === 'red') redCount++;
+                        else whiteCount++;
+                    }
+                }
+            }
+
+            if (redCount === 0) {
+                statusElement.innerText = "O'yin tugadi! Kompyuter g'alaba qozondi!";
+                return true;
+            } else if (whiteCount === 0) {
+                statusElement.innerText = "Tabriklaymiz! Siz g'alaba qozindingiz! 🎉";
+                return true;
+            }
+            return false;
+        }
+
+        function updateStatus() {
+            if (turn === 'red') {
+                turnIndicator.innerText = "Qizil (Siz)";
+                turnIndicator.style.color = "#ff4d4d";
+                statusElement.innerText = "Donani tanlang va yurish qiling";
+            } else {
+                turnIndicator.innerText = "Oq (Kompyuter)";
+                turnIndicator.style.color = "#ffffff";
+                statusElement.innerText = "Kompyuter o'ylamoqda...";
+            }
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
